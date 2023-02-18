@@ -42,7 +42,7 @@ const registrar = async (req, res)=>{
 const perfil = (req, res)=>{
     const {veterinario} = req;
 
-    res.json({veterinario});
+    res.json(veterinario);
 }
 
 const confirmar = async (req, res)=>{
@@ -80,16 +80,21 @@ const autenticar = async (req, res)=>{
     //b) Comprobar si el usuario esta confirmado
     if(!usuario.confirmado){
         const error = new Error('Tu cuenta no ha sido confirmada');
-        res.status(403).json({msg: error.message})
+        return res.status(403).json({msg: error.message})
     }
 
     //Revisar el password
     if(await usuario.comprobarPassword(password)){
-        console.log(usuario)
-        res.json({token: generarJWT(usuario.id)});
+        //autenticar
+        res.json({
+            _id: usuario._id,
+            nombre: usuario.nombre,
+            email: usuario.email,
+            token: generarJWT(usuario.id)
+        });
     }else{
         const error = new Error('Password incorrecto');
-        res.status(403).json({msg: error.message});
+        return res.status(403).json({msg: error.message});
     }
 
 }
