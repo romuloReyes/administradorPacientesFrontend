@@ -156,4 +156,74 @@ const nuevoPassword = async (req, res)=>{
     }
 };
 
-export { registrar, perfil, confirmar, autenticar, olvidePassword, comprobarToken, nuevoPassword };
+const actualizarPerfil = async (req, res)=>{
+    const veterinario = await Veterinario.findById(req.params.id);
+    
+    if(!veterinario){
+        const error = new Error('Hubo un error')
+        
+        return res.status(400).json({msg: error.message});
+    }
+
+    const { email } = req.body;
+    if( veterinario.email !== req.body.email ){
+        const existeEmail = await Veterinario.findOne({email});
+        if( existeEmail ){
+            const error = new Error('Ese email ya esta en uso');
+            
+            return res.status(400).json({msg: error.message}); 
+        }
+    }
+
+    try {
+        veterinario.nombre = req.body.nombre;
+        veterinario.email = req.body.email;
+        veterinario.web = req.body.web;
+        veterinario.telefono = req.body.telefono;
+
+        const veterinarioActualizado = await veterinario.save();
+
+        res.json(veterinarioActualizado); 
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+const actualizarPassword = async (req, res) => {
+    //Leer datos
+    const { id } = req.veterinario;
+    const { pwd_actual, pwd_nuevo } = req.body;
+
+    //Comprovar que el veterinario existe
+    const veterinario = await Veterinario.findById(id);
+    if(!veterinario){
+        const error = new Error('Hubo un error');
+        return res.status(400).json({msg: error.message});
+    }
+
+    //Comprovar el password
+    if( await veterinario.comprobarPassword(pwd_actual) ){
+        //Almacenar el nuevo password
+        veterinario.password = pwd_nuevo;
+        await veterinario.save();
+        res.json({msg:'Password almacenado correctamente'});
+    }else{
+        const error = new Error('El password actual es incorrecto');
+        return res.status(400).json({msg: error.message});
+    }
+
+    
+}
+
+export { 
+    registrar, 
+    perfil, 
+    confirmar, 
+    autenticar, 
+    olvidePassword, 
+    comprobarToken, 
+    nuevoPassword, 
+    actualizarPerfil, 
+    actualizarPassword
+};
